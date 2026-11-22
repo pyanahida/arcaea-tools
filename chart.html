@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>谱面长图(仅支持Tap)</title>
+<style>
+#chart {
+    transform: scaleY(-1);
+}
+
+</style>
+</head>
+<body>
+<input type="file" id="file" accept=".aff">
+<button id="parse">解析并绘制</button>
+<svg
+    id="chart"
+    xmlns="http://www.w3.org/2000/svg"
+    width="400" height="180000"
+    viewBox="0 0 400 180000">
+</svg>
+<script>
+// Variable
+let data = [];
+let level = 0;
+
+// DOM & CONST
+const getFile = document.getElementById('file');
+const parseBtn = document.getElementById('parse');
+const chart = document.getElementById('chart');
+
+const AcceptName = /^[0-4]\.aff$/;
+const TapExpr = /\(\d+,[1-4]\);/;
+const NS = "http://www.w3.org/2000/svg";
+
+// Get File
+getFile.addEventListener('change', async function () {
+    const file = this.files[0];
+    
+    // Check name
+    if (!AcceptName.test(file.name)) {
+        alert('仅支持 AFF 文件，0～4.aff');
+        this.value = '';
+        return;
+    }
+    
+    try {
+        // Read
+        const text = await file.text();
+
+        // Check empty
+        if (!text.trim()) {
+            alert('文件内容为空');
+            this.value = '';
+            data = '';
+            return;
+        }
+
+        // Save
+        data = text.split('\n');
+        level = parseInt(file.name[0], 10);
+    } catch (e) {
+        alert('文件读取失败');
+        this.value = '';
+        data = '';
+    }
+});
+
+parseBtn.addEventListener('click', () => {
+
+// Keys
+let taps = []
+
+// Traverse
+for (let i of data) {
+    if (TapExpr.test(i)) {
+        let parsed = i.replace(/[();]/g, '');
+        parsed = parsed.split(',');
+        taps.push(parsed);
+    }
+}
+
+// Render
+for (let t of taps) {
+    const rect = document.createElementNS(NS, 'rect');
+    rect.setAttribute('x', (t[1] - 1) * 100);
+    rect.setAttribute('y', t[0]);
+    rect.setAttribute('width', 100);
+    rect.setAttribute('height', 20);
+    rect.setAttribute('fill', '#2AB7E6');
+    chart.appendChild(rect);
+}
+
+window.scrollTo(0, document.body.scrollHeight);
+
+});
+</script>
+</body>
+</html>
