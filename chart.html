@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>谱面长图(Tap, Hold) | 小节线</title>
+<title>谱面长图(Tap, Hold) | 配色优化</title>
 <link rel="stylesheet" href="./chart.css">
 <link rel="stylesheet" href="./main.css">
 </head>
@@ -43,7 +43,7 @@ const HoldExpr = /hold\(\d+,\d+,[1-4]\);/;
 const TimingExpr = /timing\(\d+,\d+\.\d\d,\d+\.\d\d\);/;
 const NS = "http://www.w3.org/2000/svg";
 const HoldGradient = `
-<linearGradient id="hold_gradiant" x1="0" y1="0" x2="0" y2="1">
+<linearGradient id="hold_gradient" x1="0" y1="0" x2="0" y2="1">
     <stop offset="0%"   stop-color="#5799B1" />
     <stop offset="1%"   stop-color="#B3DBE7" />
     <stop offset="30%"  stop-color="#B3D1ED" />
@@ -54,7 +54,7 @@ const HoldGradient = `
 </linearGradient>
 `;
 const TapGradient = `
-<linearGradient id="tap_gradiant" x1="0" y1="0" x2="0" y2="1">
+<linearGradient id="tap_gradient" x1="0" y1="0" x2="0" y2="1">
     <stop offset="0%"   stop-color="#33A3E3" />
     <stop offset="5%"   stop-color="#1797D4" />
     <stop offset="23%"  stop-color="#4DBADB" />
@@ -157,7 +157,7 @@ for (let t of taps) {
     rect.setAttribute('y', t[0] * zoom);
     rect.setAttribute('width', 100);
     rect.setAttribute('height', 20);
-    rect.setAttribute('fill', 'url(#tap_gradiant)');
+    rect.setAttribute('fill', 'url(#tap_gradient)');
     chart.appendChild(rect);
     
     // Finding height
@@ -174,7 +174,7 @@ for (let h of holds) {
     rect.setAttribute('y', h[0] * zoom);
     rect.setAttribute('width', 100);
     rect.setAttribute('height', (h[1] - h[0]) * zoom);
-    rect.setAttribute('fill', 'url(#hold_gradiant)');
+    rect.setAttribute('fill', 'url(#hold_gradient)');
     chart.appendChild(rect);
     
     // Finding height
@@ -230,6 +230,18 @@ for (let i = 0; i < timings.length; i++) {
         time += keepTime;
     }
     }
+}
+
+// 轨道边界线
+for (let i = 0; i <= 400; i += 100) {
+    const line = document.createElementNS(NS, 'line');
+    line.setAttribute('x1', i);
+    line.setAttribute('x2', i);
+    line.setAttribute('y1', 0);
+    line.setAttribute('y2', height * zoom);
+    line.setAttribute('stroke-width', 1);
+    line.setAttribute('stroke', '#6C6577');
+    chart.appendChild(line);
 }
 
 // Height
