@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>谱面长图(仅支持Tap, Hold) | 自由缩放</title>
+<title>谱面长图(Tap, Hold) | 小节线</title>
 <link rel="stylesheet" href="./chart.css">
 <link rel="stylesheet" href="./main.css">
 </head>
@@ -12,8 +12,8 @@
 <div id="chartDiv" hidden><svg
     id="chart"
     xmlns="http://www.w3.org/2000/svg"
-    width="400" height="180000"
-    viewBox="0 0 400 180000">
+    width="400" height="0"
+    viewBox="0 0 400 0">
 </svg></div>
 
 <input class="full" type="file" id="file" accept=".aff">
@@ -23,6 +23,8 @@
 <input class="full" id="zoom" value="80" placeholder="缩放建议: 30-150">
 
 <script>
+try {
+
 // Variable
 let data = [];
 let level = 0;
@@ -38,6 +40,7 @@ const levelTxt = document.getElementById('level');
 const AcceptName = /^[0-4]\.aff$/;
 const TapExpr = /\(\d+,[1-4]\);/;
 const HoldExpr = /hold\(\d+,\d+,[1-4]\);/;
+const TimingExpr = /timing\(\d+,\d+\.\d\d,\d+\.\d\d\);/;
 const NS = "http://www.w3.org/2000/svg";
 
 // Get File
@@ -59,7 +62,7 @@ getFile.addEventListener('change', async function () {
         if (!text.trim()) {
             alert('文件内容为空');
             this.value = '';
-            data = '';
+            data = [];
             return;
         }
 
@@ -69,17 +72,19 @@ getFile.addEventListener('change', async function () {
     } catch (e) {
         alert('文件读取失败');
         this.value = '';
-        data = '';
+        data = [];
     }
 });
 
 parseBtn.addEventListener('click', () => {
 
 chartArea.hidden = false;
+chart.innerHTML = '';
 
 // Keys
 let taps = [];
 let holds = [];
+let timings = [];
 let height = 0;
 
 // Controls
@@ -106,6 +111,16 @@ for (let i of data) {
         parsed = parsed.split(',');
         holds.push(parsed);
     }
+    if (TimingExpr.test(i)) {
+        let parsed = i.replace(/[();]/g, '').slice(6);
+        parsed = parsed.split(',');
+        timings.push(parsed);
+    }
+}
+
+// Timing check
+if (timings.length === 0) {
+    alert("不是合法的 Arcaea 谱面文件");
 }
 
 // Render
@@ -152,6 +167,45 @@ switch (level) {
 }
 levelTxt.textContent = levelStr;
 
+// Lines
+let time = 0;
+for (let i = 0; i < timings.length; i++) {
+    const t = timings[i];
+    
+    const bpm = t[1];
+    const beat = t[2];
+    const keepTime = Math.floor(beat / bpm * 60 * 1000);
+    
+    // If there is another item
+    if (i + 1 < timings.length) {
+    while (time < timings[i+1][0]) {
+        const line = document.createElementNS(NS, 'line');
+        line.setAttribute('x1', 0);
+        line.setAttribute('x2', 400);
+        line.setAttribute('y1', time * zoom);
+        line.setAttribute('y2', time * zoom);
+        line.setAttribute('stroke-width', 1);
+        line.setAttribute('stroke', '#CCC');
+        chart.appendChild(line);
+        time += keepTime;
+    }
+    }
+    // This is the last item
+    else {
+    while (time < height) {
+        const line = document.createElementNS(NS, 'line');
+        line.setAttribute('x1', 0);
+        line.setAttribute('x2', 400);
+        line.setAttribute('y1', time * zoom);
+        line.setAttribute('y2', time * zoom);
+        line.setAttribute('stroke-width', 1);
+        line.setAttribute('stroke', '#CCC');
+        chart.appendChild(line);
+        time += keepTime;
+    }
+    }
+}
+
 // Height
 height *= zoom;
 chart.setAttribute('height', height);
@@ -160,6 +214,10 @@ chart.setAttribute('viewBox', `0 0 400 ${height}`);
 window.scrollTo(0, document.body.scrollHeight);
 
 });
+
+} catch (e) {
+    console.log(e);
+}
 </script>
 </body>
 </html>
