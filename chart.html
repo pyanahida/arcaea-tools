@@ -42,6 +42,27 @@ const TapExpr = /\(\d+,[1-4]\);/;
 const HoldExpr = /hold\(\d+,\d+,[1-4]\);/;
 const TimingExpr = /timing\(\d+,\d+\.\d\d,\d+\.\d\d\);/;
 const NS = "http://www.w3.org/2000/svg";
+const HoldGradient = `
+<linearGradient id="hold_gradiant" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%"   stop-color="#5799B1" />
+    <stop offset="1%"   stop-color="#B3DBE7" />
+    <stop offset="30%"  stop-color="#B3D1ED" />
+    <stop offset="55%"  stop-color="#B8C3F0" />
+    <stop offset="75%"  stop-color="#BCB9F2" />
+    <stop offset="99%"  stop-color="#C8B6F4" />
+    <stop offset="100%" stop-color="#FBD0FD" />
+</linearGradient>
+`;
+const TapGradient = `
+<linearGradient id="tap_gradiant" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%"   stop-color="#33A3E3" />
+    <stop offset="5%"   stop-color="#1797D4" />
+    <stop offset="23%"  stop-color="#4DBADB" />
+    <stop offset="52%"  stop-color="#79CBE3" />
+    <stop offset="99%"  stop-color="#7CC7DE" />
+    <stop offset="100%" stop-color="#8BBECF" />
+</linearGradient>
+`;
 
 // Get File
 getFile.addEventListener('change', async function () {
@@ -79,7 +100,12 @@ getFile.addEventListener('change', async function () {
 parseBtn.addEventListener('click', () => {
 
 chartArea.hidden = false;
-chart.innerHTML = '';
+chart.innerHTML = `
+<defs>
+${HoldGradient}
+${TapGradient}
+</defs>
+`;
 
 // Keys
 let taps = [];
@@ -131,7 +157,7 @@ for (let t of taps) {
     rect.setAttribute('y', t[0] * zoom);
     rect.setAttribute('width', 100);
     rect.setAttribute('height', 20);
-    rect.setAttribute('fill', '#2AB7E6');
+    rect.setAttribute('fill', 'url(#tap_gradiant)');
     chart.appendChild(rect);
     
     // Finding height
@@ -148,7 +174,7 @@ for (let h of holds) {
     rect.setAttribute('y', h[0] * zoom);
     rect.setAttribute('width', 100);
     rect.setAttribute('height', (h[1] - h[0]) * zoom);
-    rect.setAttribute('fill', '#6EC1F3');
+    rect.setAttribute('fill', 'url(#hold_gradiant)');
     chart.appendChild(rect);
     
     // Finding height
