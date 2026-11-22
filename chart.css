@@ -1,0 +1,10 @@
+html, body {
+    margin: 0;
+    padding: 0;
+}
+
+#chart {
+    transform: scaleY(-1);
+    display: block;
+    width: 100vw;
+}

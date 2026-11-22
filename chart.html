@@ -3,23 +3,20 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>谱面长图(仅支持Tap)</title>
-<style>
-#chart {
-    transform: scaleY(-1);
-}
-
-</style>
+<title>谱面长图(仅支持Tap, Hold)</title>
+<link rel="stylesheet" href="./chart.css">
+<link rel="stylesheet" href="./main.css">
 </head>
 <body>
-<input type="file" id="file" accept=".aff">
-<button id="parse">解析并绘制</button>
+<input class="file" type="file" id="file" accept=".aff">
+<button class="full" id="parse">解析并绘制</button>
 <svg
     id="chart"
     xmlns="http://www.w3.org/2000/svg"
     width="400" height="180000"
     viewBox="0 0 400 180000">
 </svg>
+<p id="level"></p>
 <script>
 // Variable
 let data = [];
@@ -29,9 +26,11 @@ let level = 0;
 const getFile = document.getElementById('file');
 const parseBtn = document.getElementById('parse');
 const chart = document.getElementById('chart');
+const levelTxt = document.getElementById('level');
 
 const AcceptName = /^[0-4]\.aff$/;
 const TapExpr = /\(\d+,[1-4]\);/;
+const HoldExpr = /hold\(\d+,\d+,[1-4]\);/;
 const NS = "http://www.w3.org/2000/svg";
 
 // Get File
@@ -70,7 +69,8 @@ getFile.addEventListener('change', async function () {
 parseBtn.addEventListener('click', () => {
 
 // Keys
-let taps = []
+let taps = [];
+let holds = [];
 
 // Traverse
 for (let i of data) {
@@ -78,6 +78,11 @@ for (let i of data) {
         let parsed = i.replace(/[();]/g, '');
         parsed = parsed.split(',');
         taps.push(parsed);
+    }
+    if (HoldExpr.test(i)) {
+        let parsed = i.replace(/[();]/g, '').slice(4);
+        parsed = parsed.split(',');
+        holds.push(parsed);
     }
 }
 
@@ -91,6 +96,31 @@ for (let t of taps) {
     rect.setAttribute('fill', '#2AB7E6');
     chart.appendChild(rect);
 }
+for (let h of holds) {
+    // Start >= End
+    if (h[0] >= h[1]) {
+        continue;
+    }
+    
+    const rect = document.createElementNS(NS, 'rect');
+    rect.setAttribute('x', (h[2] - 1) * 100);
+    rect.setAttribute('y', h[0]);
+    rect.setAttribute('width', 100);
+    rect.setAttribute('height', h[1] - h[0]);
+    rect.setAttribute('fill', '#6EC1F3');
+    chart.appendChild(rect);
+}
+
+let levelStr = "";
+switch (level) {
+    case 0: levelStr = "Past"; break;
+    case 1: levelStr = "Present"; break;
+    case 2: levelStr = "Future"; break;
+    case 3: levelStr = "Beyond"; break;
+    case 4: levelStr = "Eternal"; break;
+    default: levelStr = "Null";
+}
+levelTxt.textContent = levelStr;
 
 window.scrollTo(0, document.body.scrollHeight);
 
